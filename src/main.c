@@ -46,10 +46,8 @@ void state_free(state_t *self) {
 int main(void) {
     state_t state = state_new("shaders!", 640, 480);
 
-    SDL_Event event;
-
     char *vss = file_to_string("./shaders/vertex.glsl", NULL);
-    char *fss = file_to_string("./shaders/hello_fragment.glsl", NULL);
+    char *fss = file_to_string("./shaders/1_algorithmic_drawing.glsl", NULL);
 
     GLuint vs = shader_from_source(GL_VERTEX_SHADER, vss);
     GLuint fs = shader_from_source(GL_FRAGMENT_SHADER, fss);
@@ -97,6 +95,16 @@ int main(void) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+    glUseProgram(sp);
+    glUniform2f(glGetUniformLocation(sp, "res"), 640.0, 480.0);
+    glUseProgram(0);
+
+    SDL_Event event;
+
+    float m_x = 0.0;
+    float m_y = 0.0;
+    float time = SDL_GetTicks64() / 1000.0;
+
     bool quit = false;
     while (!quit) {
         while (SDL_PollEvent(&event)) {
@@ -105,18 +113,30 @@ int main(void) {
                 quit = true;
                 break;
 
+            case (SDL_MOUSEMOTION):
+                m_x = event.motion.x;
+                m_y = event.motion.y;
+                break;
+
             default:
                 break;
             }
         }
 
         glClear(GL_COLOR_BUFFER_BIT);
+
         glUseProgram(sp);
+        glUniform2f(glGetUniformLocation(sp, "mouse"), m_x, m_y);
+        glUniform1f(glGetUniformLocation(sp, "time"), time);
+
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
         glBindVertexArray(0);
+
         glUseProgram(0);
         SDL_GL_SwapWindow(state.window);
+
+        time = SDL_GetTicks64() / 1000.0;
 
         SDL_Delay(1000/75);
     }
