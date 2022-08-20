@@ -59,32 +59,42 @@ int main(void) {
     glAttachShader(sp, fs);
     glLinkProgram(sp);
 
-    float buffer[] = {
+    float vertices[] = {
          1.0, -1.0, 0.0,
         -1.0, -1.0, 0.0,
          1.0,  1.0, 0.0,
-
-        -1.0, -1.0, 0.0,
         -1.0,  1.0, 0.0,
-         1.0,  1.0, 0.0,
     };
 
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
+    GLshort indices[] = {
+        0, 1, 2,
+        0, 2, 3,
+    };
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(buffer), buffer, GL_STATIC_DRAW);
+    GLuint buffers[2];
+    glGenBuffers(2, buffers);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+
     glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     bool quit = false;
@@ -103,7 +113,7 @@ int main(void) {
         glClear(GL_COLOR_BUFFER_BIT);
         glUseProgram(sp);
         glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_SHORT, 0);
         glBindVertexArray(0);
         glUseProgram(0);
         SDL_GL_SwapWindow(state.window);
@@ -112,9 +122,9 @@ int main(void) {
     }
 
     glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-    glDeleteShader(fss);
-    glDeleteShader(vss);
+    glDeleteBuffers(2, buffers);
+    glDeleteShader(fs);
+    glDeleteShader(vs);
     free(fss);
     free(vss);
 }
